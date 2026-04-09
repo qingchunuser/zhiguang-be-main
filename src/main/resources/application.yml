@@ -1,0 +1,171 @@
+spring:
+  banner:
+    charset: utf-8
+    location: classpath:banner.txt
+  application:
+    name: zhiguang-auth               # 应用程序名称
+  datasource:
+    url: jdbc:mysql://192.168.19.128:3306/zhiguang?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC  # 数据库连接URL
+    username: root                     # 数据库用户名
+    password: 123456                   # 数据库密码
+    driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL驱动类
+    hikari:
+      maximum-pool-size: 20             # 连接池最大连接数
+      minimum-idle: 5                   # 最小空闲连接
+      idle-timeout: 600000              # 10 分钟：空闲多久回收
+      max-lifetime: 1700000             # 约 28 分钟
+      keepalive-time: 300000            # 5 分钟发一次"保活"
+      connection-timeout: 30000         # 30 秒拿不到连接就报错
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false  # 日期格式序列化配置，不转换为时间戳
+  data:
+    redis:
+      host: localhost                  # Redis服务器地址
+      port: 6379                       # Redis服务器端口
+  kafka:
+    # 根据实际网络情况选择
+    bootstrap-servers: 192.168.19.132:9092  # 如果所有节点都能解析node2主机名
+    # 或者使用IP地址（更稳定）
+    # bootstrap-servers: 192.168.1.102:9092  # node1的实际IP
+
+    template:
+      default-topic: test  # 您已经创建的topic
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      linger: 10ms
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 1
+
+    consumer:
+      group-id: counter-agg
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest  # 改为earliest以便消费历史消息
+      enable-auto-commit: false
+
+    listener:
+      type: single
+      ack-mode: manual
+
+  ai:
+    deepseek:
+      api-key: sk-86fbdcdafcf441629fb5049b5002699e  # DeepSeek API密钥
+      base-url: https://api.deepseek.com            # DeepSeek API基础URL
+      chat:
+        options:
+          model: deepseek-chat           # DeepSeek聊天模型
+          temperature: 0.8               # 模型温度参数，控制输出随机性
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode  # OpenAI兼容API基础URL
+      api-key: sk-d1c8ff9e7f4348bf8b6e906f356b4f7e              # OpenAI API密钥
+      embedding:
+        options:
+          model: text-embedding-v4       # 文本向量化模型
+          dimensions: 1536               # 向量维度
+    vectorstore:
+      elasticsearch:
+        initialize-schema: true        # 初始化索引模式
+        index-name: zhiguang-ai-index  # AI索引名称
+        dimensions: 1536               # 一定要和上面的 dimensions 一致，不然会报错
+  elasticsearch:
+    uris: 192.168.19.128:9200      # Elasticsearch服务器地址
+
+# Canal数据库变更监听配置
+canal:
+  enabled: true                    # 是否启用canal
+  host: 192.168.19.128              # canal服务器地址
+  port: 11111                      # canal服务器端口
+  destination: example             # canal实例名称
+  username: root                   # canal连接用户名
+  password: 123456                 # canal连接密码
+  filter: zhiguang\\.outbox         # 监听的数据表过滤规则
+  batchSize: 1000                  # 每次拉取数据的最大条数
+  intervalMs: 1000                 # 拉取数据的时间间隔(毫秒)
+
+# SDS重建相关配置
+counter:
+  rebuild:
+    enabled: true                 # 是否开启计数器重建功能
+    lock: # 重建过程中的锁配置
+      ttl-ms: 5000                 # 锁的过期时间(毫秒)
+      watchdog-ms: 30000           # 锁看门狗时间(毫秒)，防止意外释放
+    rate: # 重建频率限制配置
+      permits: 3                   # 时间窗口内允许的请求数
+      window-seconds: 10           # 频率限制时间窗口(秒)
+    backoff: # 重试退避策略
+      base-ms: 500                 # 基础退避时间(毫秒)
+      max-ms: 30000                # 最大退避时间(毫秒)
+
+# MyBatis框架配置
+mybatis:
+  mapper-locations: classpath*:mapper/*.xml   # Mapper XML文件位置
+  configuration:
+    map-underscore-to-camel-case: true        # 开启下划线到驼峰命名的自动映射
+
+# 认证授权相关配置
+auth:
+  jwt: # JWT令牌配置
+    issuer: zhiguang               # JWT签发者
+    key-id: zhiguang-key           # 密钥ID
+    private-key: classpath:keys/private.pem  # 私钥路径
+    public-key: classpath:keys/public.pem    # 公钥路径
+    access-token-ttl: PT15M        # 访问令牌有效期(15分钟)
+    refresh-token-ttl: P7D         # 刷新令牌有效期(7天)
+  verification: # 验证码配置
+    code-length: 6                 # 验证码长度
+    ttl: PT5M                      # 验证码有效期(5分钟)
+    max-attempts: 5                # 最大尝试次数
+    send-interval: PT60S           # 验证码发送间隔(60秒)
+    daily-limit: 5                # 每日发送上限
+  password: # 密码配置
+    bcrypt-strength: 12            # BCrypt加密强度
+    min-length: 8                  # 密码最小长度
+
+# 日志配置
+logging:
+  level:
+    root: INFO                     # 根日志级别
+    '[com.tongji]': info          # 特定包的日志级别
+    org.apache.kafka.clients.NetworkClient: OFF
+    org.springframework.kafka.core.ProducerFactory: OFF
+    org.springframework.kafka.core.ConsumerFactory: OFF
+    org:
+      apache:
+        kafka:
+          clients:
+            consumer:
+              ConsumerConfig: OFF
+
+# 对象存储服务配置(阿里云OSS)
+oss:
+  endpoint: oss-cn-beijing.aliyuncs.com     # OSS访问域名
+  access-key-id: ${OSS_ACCESS_KEY_ID}  # 访问密钥ID
+  access-key-secret: ${OSS_ACCESS_KEY_SECRET}  # 访问密钥
+  bucket: zhi-guang                       # 存储桶名称
+  folder: avatars                      # 存储文件夹
+
+# 缓存配置
+cache:
+  l2: # 二级缓存配置
+    public-cfg: # 公共配置缓存
+      ttl-seconds: 15             # 缓存过期时间(秒)
+      max-size: 1000              # 最大缓存数量
+    mine-cfg: # 个人配置缓存
+      ttl-seconds: 10             # 缓存过期时间(秒)
+      max-size: 1000              # 最大缓存数量
+  hotkey: # 热点key检测配置
+    window-seconds: 60            # 统计窗口时间(秒)
+    segment-seconds: 10           # 窗口分段时间(秒)
+    level-low: 50                 # 低热度阈值
+    level-medium: 200             # 中热度阈值
+    level-high: 500               # 高热度阈值
+    extend-low-seconds: 20        # 低热度key延时时间(秒)
+    extend-medium-seconds: 60     # 中热度key延时时间(秒)
+    extend-high-seconds: 120      # 高热度key延时时间(秒)
+
