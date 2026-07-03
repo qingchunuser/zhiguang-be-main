@@ -46,3 +46,14 @@ docker-compose.override.yml
 # Docker 相关日志和临时文件
 *.log
 .env.backup
+
+
+### Documents ###
+# 排除所有 PDF、Word 等文档文件
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx

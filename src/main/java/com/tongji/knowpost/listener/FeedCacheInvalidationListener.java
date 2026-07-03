@@ -50,7 +50,7 @@ public class FeedCacheInvalidationListener {
             try {
                 KnowPost post = knowPostMapper.findById(Long.valueOf(eid));
                 if (post != null && post.getCreatorId() != null) {
-                    long owner = post.getCreatorId();//知文的作者
+                    long owner = post.getCreatorId();//作品的作者
                     if ("like".equals(metric)) userCounterService.incrementLikesReceived(owner, delta);
                     if ("fav".equals(metric)) userCounterService.incrementFavsReceived(owner, delta);
                 }
