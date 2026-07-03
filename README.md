@@ -93,7 +93,7 @@
 1. 克隆项目
    git clone https://github.com/qingchunuser/zhiguang-be-main.git
 2. 配置 `application.yml`（数据库、Redis、Kafka、ES 等连接信息）
-3. 执行 `db/schema.sql` 初始化数据库
+3. 执行 `db/zhiguang.sql` 初始化数据库
 4. 进入项目目录
    cd zhiguang-be-main
 5. 启动项目
