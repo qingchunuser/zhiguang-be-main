@@ -76,6 +76,29 @@
 - 合理分块、幂等删除、预索引优化，降低首次提问等待时间
 
 ##  项目结构
+### 模块说明
+
+| 模块 | 职责 | 核心技术 |
+|------|------|----------|
+| **auth** | 用户认证、JWT 管理、验证码 | Spring Security、Redis、RS256 |
+| **cache** | 多级缓存、HotKey 探测 | Caffeine、Redis、自定义算法 |
+| **counter** | 高并发计数、位图操作 | Redis SDS、Lua 脚本、Kafka |
+| **knowpost** | 帖文 CRUD、Feed 流 | MyBatis、OSS、DeepSeek AI |
+| **relation** | 关注/粉丝、Outbox 模式 | Canal、Kafka、事件驱动 |
+| **search** | 全文检索、联想建议 | Elasticsearch、BM25、Completion |
+| **llm** | RAG 问答、AI 摘要 | Spring AI、DeepSeek、向量库 |
+| **storage** | 文件上传、预签名 URL | 阿里云 OSS |
+| **profile** | 用户资料管理 | MyBatis、OSS |
+| **user** | 用户基础信息管理 | MyBatis |
+
+### 关键文件说明
+
+- **`application.yml`**：Spring Boot 核心配置，包含数据库、Redis、Kafka、ES 等连接信息
+- **`*.lua`**：Redis Lua 脚本，用于原子操作（计数、位图、限流）
+- **`keys/*.pem`**：RSA 密钥对，用于 JWT RS256 签名
+- **`mapper/*.xml`**：MyBatis SQL 映射文件
+- **`db/zhiguang.sql`**：数据库表结构初始化脚本
+
 
 
 
@@ -100,3 +123,14 @@
    ./mvnw spring-boot:run
 6. 访问项目
    http://localhost:8080/
+
+
+
+## 🎨 项目标识
+
+本项目启动时会显示自定义的 ASCII Art Banner，使用 [TAAG - The ASCII Art Generator](http://patorjk.com/software/taag/) 生成。
+
+- **工具地址**：http://patorjk.com/software/taag/
+- **字体样式**：3D Diagonal
+- **文字内容**：Qing Chun
+
